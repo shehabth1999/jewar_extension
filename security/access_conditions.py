@@ -2,31 +2,38 @@
 """
 Access conditions for jewar_extension module.
 
-Format for each condition:
-{
-    "name": "Human readable name",
-    "model": "app.model",  # Model this condition applies to
-    "condition": {         # Filter condition in ERPFilterRequest format
-        "operator": "and",
-        "filters": [
-            {"field": "field_name", "operator": "eq", "value": "value"},
-            # ... more filters
-        ]
-    },
-    "groups": ["group.technical.name"],  # Optional: groups this applies to (empty = global)
-    "permissions": [1, 1, 1, 0],  # [view, add, change, delete] as [0/1, 0/1, 0/1, 0/1]
-}
+Record rule on the REAL contact (base.partner): every non-superuser sees only the
+contacts of the WhatsApp accounts where they are an admin. This applies wherever
+base.partner is queried (Contacts app, pickers, etc.) — access conditions are
+model-wide, not per-view.
+
+`user.whatsapp_admin_contact_ids` is resolved to the distinct partner ids by the
+patch in ../patches.py (registered from apps.py `ready()`).
+
+Delete is NOT handled here — base.partner already restricts delete to
+contacts.admins + superusers via the contacts module's model permissions.
 """
 
-from modules.base.utils.filter_schema import create_own_records_condition, create_true_field_condition
-
 ACCESS_CONDITIONS = [
-    # Example: Users can only view/edit their own records
-    # {
-    #     "name": "my records only",
-    #     "model": "jewar_extension.modelname",
-    #     "condition": create_own_records_condition('assigned_to'),
-    #     "permissions": [1, 1, 1, 0],  # View, Add, Change, No Delete
-    #     "groups": ["jewar_extension.users"],
-    # },
+    {
+        "name": "own whatsapp account contacts",
+        "model": "base.partner",
+        "condition": {
+            "filters": {
+                "operator": "and",
+                "filters": [
+                    {
+                        "field": "id",
+                        "operator": "in",
+                        "value": "user.whatsapp_admin_contact_ids",
+                    },
+                ],
+            }
+        },
+        # [view, add, change, delete] — 1 = this rule is ENFORCED for that op.
+        # Scope view + change (can't edit what you can't see); add/delete untouched
+        # (delete stays gated by base.partner model perms).
+        "permissions": [1, 0, 1, 0],
+        "groups": [],  # global: applies to all non-superusers
+    },
 ]

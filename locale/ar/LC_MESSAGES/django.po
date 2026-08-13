@@ -11,9 +11,275 @@ msgstr ""
 msgid "\nAdds a Contacts view that shows each user only the contacts belonging to the\nWhatsApp accounts where they are an admin. Delete is restricted to Contacts\nAdmins and superusers.\n"
 msgstr "\nيضيف عرضًا لجهات الاتصال يُظهر لكل مستخدم جهات الاتصال التابعة فقط لحسابات\nواتساب التي يكون فيها مسؤولاً. الحذف مقصور على مسؤولي جهات الاتصال\nوالمشرفين الخارقين.\n"
 
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Accounts"
+msgstr "الحسابات"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "All accounts included"
+msgstr "كل الحسابات مشمولة"
+
+msgid "Another WhatsApp group build is currently running."
+msgstr "هناك عملية إنشاء مجموعات واتساب قيد التنفيذ بالفعل."
+
+msgid "Batch"
+msgstr "الدفعة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Batch"
+msgstr "الدفعة"
+
+msgid "Batch name"
+msgstr "اسم الدفعة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Batch name"
+msgstr "اسم الدفعة"
+
+msgid "Batch name to exclude"
+msgstr "اسم الدفعة المراد استبعادها"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Batch name to exclude"
+msgstr "اسم الدفعة المراد استبعادها"
+
+msgid "Build WhatsApp Groups"
+msgstr "إنشاء مجموعات واتساب"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Build WhatsApp Groups"
+msgstr "إنشاء مجموعات واتساب"
+
+msgid "Building \"%(hint)s\" in the background — %(contacts)s contacts into %(groups)s groups. Job #%(job)s."
+msgstr "جارٍ إنشاء \"%(hint)s\" في الخلفية — %(contacts)s جهة اتصال في %(groups)s مجموعة. المهمة رقم %(job)s."
+
+msgid "Completed"
+msgstr "مكتملة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Contacts flagged as suppliers never receive a marketing group"
+msgstr "جهات الاتصال المُعلَّمة كمورّدين لا تدخل أي مجموعة تسويقية"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Contacts per group (10-1000)"
+msgstr "عدد جهات الاتصال في كل مجموعة (10 - 1000)"
+
+msgid "Could not queue the build — the task queue is unreachable. Nothing was created."
+msgstr "تعذّر بدء العملية — لا يمكن الوصول إلى طابور المهام. لم يتم إنشاء أي شيء."
+
+msgid "Enter a batch name first."
+msgstr "أدخل اسم الدفعة أولاً."
+
+msgid "Enter the batch name to exclude."
+msgstr "أدخل اسم الدفعة المراد استبعادها."
+
+msgid "Enter the batch name you want to exclude."
+msgstr "أدخل اسم الدفعة التي تريد استبعادها."
+
+msgid "Exclude Meta errors"
+msgstr "استبعاد أخطاء ميتا"
+
+msgid "Exclude accounts"
+msgstr "استبعاد حسابات"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Exclude accounts"
+msgstr "استبعاد حسابات"
+
+msgid "Exclude contacts already sent a template this month"
+msgstr "استبعاد جهات الاتصال التي أُرسل إليها قالب هذا الشهر"
+
+msgid "Exclude contacts in a specific batch"
+msgstr "استبعاد جهات الاتصال الموجودة في دفعة محددة"
+
+msgid "Exclude contacts in any previous batch"
+msgstr "استبعاد جهات الاتصال الموجودة في أي دفعة سابقة"
+
+msgid "Exclude suppliers"
+msgstr "استبعاد المورّدين"
+
+msgid "Failed"
+msgstr "فشلت"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Filters"
+msgstr "التصفيات"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Final contacts"
+msgstr "جهات الاتصال النهائية"
+
+msgid "Group size"
+msgstr "حجم المجموعة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Group size"
+msgstr "حجم المجموعة"
+
+msgid "Group size must be a whole number."
+msgstr "يجب أن يكون حجم المجموعة رقمًا صحيحًا."
+
+msgid "Group size must be between 10 and 1000."
+msgstr "يجب أن يكون حجم المجموعة بين 10 و1000."
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Groups"
+msgstr "المجموعات"
+
+msgid "Groups created"
+msgstr "المجموعات المُنشأة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "In any previous batch"
+msgstr "في أي دفعة سابقة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "In one specific batch"
+msgstr "في دفعة محددة"
+
 msgid "Jewar Contacts"
 msgstr "جهات اتصال جوار"
 
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Leaves out anyone who already got a template message this calendar month"
+msgstr "يستبعد كل من وصلته رسالة قالب خلال هذا الشهر الميلادي"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Meta errors"
+msgstr "أخطاء ميتا"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "New batch"
+msgstr "دفعة جديدة"
+
+msgid "No contacts match these filters — nothing to build."
+msgstr "لا توجد جهات اتصال مطابقة لهذه التصفيات — لا يوجد ما يتم إنشاؤه."
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Numbers Meta says cannot or should not receive marketing"
+msgstr "الأرقام التي تُبلّغ ميتا بأنها لا تستطيع أو لا ينبغي أن تتلقى رسائل تسويقية"
+
+msgid "Options"
+msgstr "الخيارات"
+
+msgid "Pending"
+msgstr "قيد الانتظار"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Prefixes every group in this run, e.g. \"xx1 basmala 1 / 250\""
+msgstr "يُضاف في بداية اسم كل مجموعة في هذه العملية، مثل \"xx1 basmala 1 / 250\""
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Previous batches"
+msgstr "الدفعات السابقة"
+
+msgid "Processed"
+msgstr "تمت معالجتها"
+
+msgid "Processing"
+msgstr "قيد التنفيذ"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — Meta errors"
+msgstr "مستبعد — أخطاء ميتا"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — duplicate phones"
+msgstr "مستبعد — أرقام مكررة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — excluded accounts"
+msgstr "مستبعد — حسابات مستبعدة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — previous batches"
+msgstr "مستبعد — دفعات سابقة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — sent this month"
+msgstr "مستبعد — أُرسل إليهم هذا الشهر"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Removed — suppliers"
+msgstr "مستبعد — مورّدون"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Repeats & recent sends"
+msgstr "التكرارات والإرسال الأخير"
+
+msgid "Result"
+msgstr "النتيجة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Sent a template this month"
+msgstr "أُرسل إليه قالب هذا الشهر"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Sizing"
+msgstr "الحجم"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Skip contacts already grouped"
+msgstr "تخطي جهات الاتصال المُجمَّعة سابقًا"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Skip these contacts"
+msgstr "تخطي جهات الاتصال هذه"
+
+msgid "Split repeated numbers"
+msgstr "توزيع الأرقام المكررة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Split repeated numbers"
+msgstr "توزيع الأرقام المكررة"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Suppliers"
+msgstr "المورّدون"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "The same person under several accounts is placed once, spread to balance the load"
+msgstr "الشخص نفسه المسجَّل على أكثر من حساب يُدرج مرة واحدة فقط، ويُوزَّع لموازنة الحمل بين الحسابات"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "These accounts get no groups at all"
+msgstr "لن يتم إنشاء أي مجموعات لهذه الحسابات"
+
+msgid "Total contacts"
+msgstr "إجمالي جهات الاتصال"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Total contacts"
+msgstr "إجمالي جهات الاتصال"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Unique phones"
+msgstr "الأرقام الفريدة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Use this to catch contacts added since a batch was built"
+msgstr "استخدم هذا لتضمين جهات الاتصال التي أُضيفت بعد إنشاء الدفعة"
+
+msgid "WhatsApp Account"
+msgstr "حساب واتساب"
+
+msgid "WhatsApp Group Build"
+msgstr "عملية إنشاء مجموعات واتساب"
+
+msgid "WhatsApp Group Builds"
+msgstr "عمليات إنشاء مجموعات واتساب"
+
 msgid "WhatsApp-account-scoped contacts view"
 msgstr "عرض جهات الاتصال حسب حساب واتساب"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "Which batch"
+msgstr "أي دفعة"
+
+msgctxt "ui/views/build_groups_wizard.py"
+msgid "e.g. xx1"
+msgstr "مثال: xx1"
 

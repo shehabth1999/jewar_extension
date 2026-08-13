@@ -51,8 +51,11 @@ jewar_build_groups_form_view = {
                         "required": True,
                         "maxLength": 64,
                         "placeholder": _("e.g. xx1"),
-                        "help": _("Prefixes every group in this run, "
-                                  "e.g. \"xx1 basmala 1 / 250\""),
+                        # Kept on one line: collect_translations matches the
+                        # gettext call with a regex, so a string split across
+                        # lines by implicit concatenation is never extracted
+                        # and can never be translated.
+                        "help": _('Prefixes every group in this run, e.g. "xx1 basmala 1 / 250"'),
                     },
                 ],
             },
@@ -117,8 +120,7 @@ jewar_build_groups_form_view = {
                                     "widget": "switch",
                                     "defaultValue": True,
                                     "onChange": True,
-                                    "help": _("Contacts flagged as suppliers never "
-                                              "receive a marketing group"),
+                                    "help": _("Contacts flagged as suppliers never receive a marketing group"),
                                 },
                                 {
                                     "name": "exclude_meta_errors",
@@ -126,8 +128,7 @@ jewar_build_groups_form_view = {
                                     "widget": "switch",
                                     "defaultValue": True,
                                     "onChange": True,
-                                    "help": _("Numbers Meta says cannot or should not "
-                                              "receive marketing"),
+                                    "help": _("Numbers Meta says cannot or should not receive marketing"),
                                 },
                             ],
                         },
@@ -140,16 +141,14 @@ jewar_build_groups_form_view = {
                                     "widget": "switch",
                                     "defaultValue": True,
                                     "onChange": True,
-                                    "help": _("The same person under several accounts is "
-                                              "placed once, spread to balance the load"),
+                                    "help": _("The same person under several accounts is placed once, spread to balance the load"),
                                 },
                                 {
                                     "name": "exclude_templated_this_month",
                                     "string": _("Sent a template this month"),
                                     "widget": "switch",
                                     "onChange": True,
-                                    "help": _("Leaves out anyone who already got a "
-                                              "template message this calendar month"),
+                                    "help": _("Leaves out anyone who already got a template message this calendar month"),
                                 },
                             ],
                         },
@@ -172,8 +171,7 @@ jewar_build_groups_form_view = {
                                     "string": _("In one specific batch"),
                                     "widget": "switch",
                                     "onChange": True,
-                                    "help": _("Use this to catch contacts added since a "
-                                              "batch was built"),
+                                    "help": _("Use this to catch contacts added since a batch was built"),
                                 },
                             ],
                         },

@@ -99,8 +99,7 @@ class CampaignExtension(ModelExtension):
                 status='failed', completed_at=timezone.now(),
                 result_message=f'could not reach the task queue: {exc}'[:2000])
             return {'status': False, 'open_mode': 'message', 'data': {},
-                    'message': _("Could not queue the build — the task queue is "
-                                 "unreachable. Nothing was created.")}
+                    'message': _("Could not queue the build — the task queue is unreachable. Nothing was created.")}
 
         GroupBuildJob.objects.filter(pk=job.pk).update(celery_task_id=async_result.id or '')
 
@@ -108,10 +107,8 @@ class CampaignExtension(ModelExtension):
             'status': True,
             'open_mode': 'message',
             'data': {'job_id': job.id},
-            'message': _(
-                'Building "%(hint)s" in the background — %(contacts)s contacts into '
-                '%(groups)s groups. Job #%(job)s.'
-            ) % {'hint': hint, 'contacts': f'{plan.final_contacts:,}',
+            'message': _('Building "%(hint)s" in the background — %(contacts)s contacts into %(groups)s groups. Job #%(job)s.'
+                         ) % {'hint': hint, 'contacts': f'{plan.final_contacts:,}',
                  'groups': plan.group_count, 'job': job.id},
             'on_success': {'type': 'refresh'},
         }

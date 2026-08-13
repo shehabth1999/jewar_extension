@@ -86,13 +86,25 @@ class CampaignExtension(ModelExtension):
             batch_hint=hint, status='pending', options=options.to_dict(),
             total_records=plan.final_contacts, started_at=timezone.now())
 
+        # Captured here, not in the task: the worker runs without a request, so
+        # this is the only place that knows who pressed the button and therefore
+        # who should get the bell notification when the build finishes.
+        user_id = job.created_by_id
+        if not user_id:
+            try:
+                from modules.base.middleware import get_current_user
+
+                user_id = getattr(get_current_user(), 'id', None)
+            except Exception:
+                logger.debug("group build: could not resolve the requesting user")
+
         # The row is written before the enqueue so a task that starts instantly
         # still finds it. That ordering means a failed enqueue leaves a 'pending'
         # row behind — and because running_job() counts 'pending' as live, that
         # one row would answer "another build is currently running" to every
         # later attempt, forever. Fail it explicitly instead.
         try:
-            async_result = run_group_build.delay(job.id, options.to_dict())
+            async_result = run_group_build.delay(job.id, options.to_dict(), user_id=user_id)
         except Exception as exc:
             logger.exception("could not queue group build job %s", job.id)
             GroupBuildJob.objects.filter(pk=job.pk).update(

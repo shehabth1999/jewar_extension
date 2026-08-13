@@ -104,6 +104,6 @@ class BuildGroupsWizard(TransientModel):
         The whole scan is ~1.5s over 160k rows, so this runs inline rather than
         making the user press a preview button.
         """
-        from jewar_extension.services.group_builder import preview
+        from .services.group_builder import preview
 
         return preview(getattr(self, '_original_data', None) or {})

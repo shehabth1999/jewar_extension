@@ -24,10 +24,14 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from django.db import connection, transaction
+from django.db import connection, models, transaction
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+# How long a build job may hold the single-flight lock before it is treated as
+# abandoned. A real build is seconds; this is deliberately far above that.
+STALE_JOB_AFTER = timedelta(hours=2)
 
 # Grouping key for "same handset". Digits only, last 10, so that a local
 # ``01005101964`` and an international ``201005101964`` collapse to one person.
@@ -442,9 +446,18 @@ def preview(values):
             values.get('exclude_batch_hint') or '').strip():
         return {'errors': {'exclude_batch_hint': _("Enter the batch name to exclude.")}}
 
+    # The payload is whatever the number widget put in the field, which is a
+    # string and not necessarily an integer one - a half-typed "25", a pasted
+    # "250.5", spaces. A bare int() here raises straight out of the onchange,
+    # and the user gets a 500 instead of a validation message.
     size = values.get('group_size')
-    if size not in (None, '') and not (10 <= int(size) <= 1000):
-        return {'errors': {'group_size': _("Group size must be between 10 and 1000.")}}
+    if str(size if size is not None else '').strip():
+        try:
+            size = int(str(size).strip())
+        except (TypeError, ValueError):
+            return {'errors': {'group_size': _("Group size must be a whole number.")}}
+        if not 10 <= size <= 1000:
+            return {'errors': {'group_size': _("Group size must be between 10 and 1000.")}}
 
     try:
         plan = compute(BuildOptions.from_values(values))
@@ -455,6 +468,31 @@ def preview(values):
 
 
 def running_job():
-    """The build job currently occupying the queue, if any."""
-    from jewar_extension.models import GroupBuildJob
-    return GroupBuildJob.objects.filter(status__in=('pending', 'processing')).first()
+    """The build job currently occupying the queue, if any.
+
+    A job only ever holds the queue for as long as a build takes (seconds to a
+    couple of minutes). Anything still 'pending' or 'processing' after
+    ``STALE_JOB_AFTER`` is not running — it is a worker that was killed
+    mid-build, or a task that was never picked up because no worker was
+    listening. Those rows used to hold the lock forever, and there is no screen
+    anywhere that can clear one, so the whole feature would answer "another
+    WhatsApp group build is currently running" until somebody edited the table
+    by hand. Age them out and record why.
+    """
+    from ..models import GroupBuildJob
+
+    cutoff = timezone.now() - STALE_JOB_AFTER
+    live = GroupBuildJob.objects.filter(status__in=('pending', 'processing'))
+
+    stale = live.filter(
+        models.Q(started_at__lt=cutoff)
+        | models.Q(started_at__isnull=True, created_at__lt=cutoff))
+    abandoned = list(stale.values_list('id', flat=True))
+    if abandoned:
+        logger.warning("releasing %s abandoned group build job(s): %s",
+                       len(abandoned), abandoned)
+        GroupBuildJob.objects.filter(id__in=abandoned).update(
+            status='failed', completed_at=timezone.now(),
+            result_message='abandoned — no worker finished this job')
+
+    return live.exclude(id__in=abandoned).first()

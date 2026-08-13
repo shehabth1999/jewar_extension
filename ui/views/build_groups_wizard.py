@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 # Wizard behind the "Build WhatsApp Groups" button on the Groups screen.
 #
+# Layout note: FormGroup renders its own fields `grid-cols-1` — always one per
+# line — and only *groups* sit side by side (FormRow is `@3xl:grid-cols-2`, a
+# container query on the <form>). The slideover opens at size xl = 900px, which
+# clears @3xl, so every section here carries TWO groups to get two real columns.
+# One group per section is what makes this form a single tall stack.
+#
 # The footer is the preview: every field in it is written by the @onchange on
 # jewar_extension.buildgroupswizard, so the numbers repaint as the user toggles
 # the filters. The footer only supports label -> value rows with the `number`
@@ -15,6 +21,17 @@ def _readout(name, string, highlight=False):
     return field
 
 
+# The wizard is a TransientModel, so the form always opens in create mode and the
+# frontend seeds it from `defaultValue` alone — the backend does not inject model
+# defaults into the schema. Without these the switches render OFF while the model
+# (and BuildOptions) say True, and the build silently filters nothing.
+_ONLY_SPECIFIC_BATCH = {
+    "field": "exclude_specific_batch",
+    "operator": "eq",
+    "value": False,
+}
+
+
 jewar_build_groups_form_view = {
     "key": "jewar_build_groups_form_view",
     "name": _("Build WhatsApp Groups"),
@@ -24,30 +41,46 @@ jewar_build_groups_form_view = {
     "view_type": "form",
     "body": {
         "sheet": {
+            "title": {
+                "title": _("New batch"),
+                "fields": [
+                    {
+                        "name": "batch_hint",
+                        "string": _("Batch name"),
+                        "widget": "text",
+                        "required": True,
+                        "maxLength": 64,
+                        "placeholder": _("e.g. xx1"),
+                        "help": _("Prefixes every group in this run, "
+                                  "e.g. \"xx1 basmala 1 / 250\""),
+                    },
+                ],
+            },
             "sections": [
                 {
                     "title": _("Batch"),
                     "groups": [
                         {
+                            "title": _("Sizing"),
                             "fields": [
-                                {
-                                    "name": "batch_hint",
-                                    "string": _("Batch name"),
-                                    "widget": "text",
-                                    "required": True,
-                                    "placeholder": _("e.g. xx1"),
-                                    "help": _("Prefixes every group in this run, "
-                                              "e.g. \"xx1 basmala 1 / 250\""),
-                                },
                                 {
                                     "name": "group_size",
                                     "string": _("Group size"),
                                     "widget": "number",
                                     "required": True,
+                                    "min": 10,
+                                    "max": 1000,
+                                    "step": 10,
+                                    "defaultValue": 250,
                                     "onChange": True,
                                     "onChangeTrigger": "blur",
                                     "help": _("Contacts per group (10-1000)"),
                                 },
+                            ],
+                        },
+                        {
+                            "title": _("Accounts"),
+                            "fields": [
                                 {
                                     "name": "excluded_accounts",
                                     "string": _("Exclude accounts"),
@@ -55,82 +88,112 @@ jewar_build_groups_form_view = {
                                     "displayField": "name",
                                     "multiSelect": True,
                                     "onChange": True,
+                                    "placeholder": _("All accounts included"),
                                     "help": _("These accounts get no groups at all"),
+                                    "domain": {
+                                        "filters": {
+                                            "operator": "and",
+                                            "filters": [
+                                                {"field": "active", "operator": "eq",
+                                                 "value": True},
+                                            ],
+                                        }
+                                    },
+                                    "context": {"default_fields": {"active": True}},
                                 },
-                            ]
-                        }
+                            ],
+                        },
                     ],
                 },
                 {
                     "title": _("Filters"),
                     "groups": [
                         {
+                            "title": _("Skip these contacts"),
                             "fields": [
                                 {
                                     "name": "exclude_suppliers",
-                                    "string": _("Exclude suppliers"),
+                                    "string": _("Suppliers"),
                                     "widget": "switch",
+                                    "defaultValue": True,
                                     "onChange": True,
+                                    "help": _("Contacts flagged as suppliers never "
+                                              "receive a marketing group"),
                                 },
+                                {
+                                    "name": "exclude_meta_errors",
+                                    "string": _("Meta errors"),
+                                    "widget": "switch",
+                                    "defaultValue": True,
+                                    "onChange": True,
+                                    "help": _("Numbers Meta says cannot or should not "
+                                              "receive marketing"),
+                                },
+                            ],
+                        },
+                        {
+                            "title": _("Repeats & recent sends"),
+                            "fields": [
                                 {
                                     "name": "dedupe_handsets",
                                     "string": _("Split repeated numbers"),
                                     "widget": "switch",
+                                    "defaultValue": True,
                                     "onChange": True,
                                     "help": _("The same person under several accounts is "
                                               "placed once, spread to balance the load"),
                                 },
                                 {
-                                    "name": "exclude_meta_errors",
-                                    "string": _("Exclude Meta errors"),
-                                    "widget": "switch",
-                                    "onChange": True,
-                                    "help": _("Numbers Meta says cannot or should not "
-                                              "receive marketing"),
-                                },
-                                {
                                     "name": "exclude_templated_this_month",
-                                    "string": _("Exclude contacts sent a template this month"),
+                                    "string": _("Sent a template this month"),
                                     "widget": "switch",
                                     "onChange": True,
+                                    "help": _("Leaves out anyone who already got a "
+                                              "template message this calendar month"),
                                 },
-                            ]
-                        }
+                            ],
+                        },
                     ],
                 },
                 {
                     "title": _("Previous batches"),
                     "groups": [
                         {
+                            "title": _("Skip contacts already grouped"),
                             "fields": [
                                 {
                                     "name": "exclude_any_previous_batch",
-                                    "string": _("Exclude contacts in any previous batch"),
+                                    "string": _("In any previous batch"),
                                     "widget": "switch",
                                     "onChange": True,
                                 },
                                 {
                                     "name": "exclude_specific_batch",
-                                    "string": _("Exclude contacts in a specific batch"),
+                                    "string": _("In one specific batch"),
                                     "widget": "switch",
                                     "onChange": True,
                                     "help": _("Use this to catch contacts added since a "
                                               "batch was built"),
                                 },
+                            ],
+                        },
+                        {
+                            # Hidden as a whole so the column title does not sit
+                            # above an empty slot while the toggle is off.
+                            "title": _("Which batch"),
+                            "invisible": _ONLY_SPECIFIC_BATCH,
+                            "fields": [
                                 {
                                     "name": "exclude_batch_hint",
                                     "string": _("Batch name to exclude"),
                                     "widget": "text",
+                                    "maxLength": 64,
                                     "placeholder": _("e.g. xx1"),
                                     "onChange": True,
-                                    "invisible": {
-                                        "field": "exclude_specific_batch",
-                                        "operator": "eq",
-                                        "value": False,
-                                    },
+                                    "invisible": _ONLY_SPECIFIC_BATCH,
                                 },
-                            ]
-                        }
+                            ],
+                        },
                     ],
                 },
             ],

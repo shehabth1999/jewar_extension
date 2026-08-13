@@ -1,0 +1,19 @@
+# Translation file - Auto-generated
+# Language: ar
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "\nAdds a Contacts view that shows each user only the contacts belonging to the\nWhatsApp accounts where they are an admin. Delete is restricted to Contacts\nAdmins and superusers.\n"
+msgstr "\nيضيف عرضًا لجهات الاتصال يُظهر لكل مستخدم جهات الاتصال التابعة فقط لحسابات\nواتساب التي يكون فيها مسؤولاً. الحذف مقصور على مسؤولي جهات الاتصال\nوالمشرفين الخارقين.\n"
+
+msgid "Jewar Contacts"
+msgstr "جهات اتصال جوار"
+
+msgid "WhatsApp-account-scoped contacts view"
+msgstr "عرض جهات الاتصال حسب حساب واتساب"
+

@@ -28,7 +28,9 @@ class Command(BaseCommand):
                             help='Show the breakdown but do not create anything')
 
     def handle(self, *args, **options):
-        from jewar_extension.services.group_builder import BuildOptions, build, compute, running_job
+        # Relative: the package is "modules.jewar_extension" in-repo and
+        # top-level "jewar_extension" when the fleet clones it into extensions/.
+        from ...services.group_builder import BuildOptions, build, compute, running_job
 
         dry_run = options['dry_run']
         if dry_run:
@@ -73,7 +75,7 @@ class Command(BaseCommand):
         # run block each other rather than both building the same batch.
         from django.utils import timezone
 
-        from jewar_extension.models import GroupBuildJob
+        from ...models import GroupBuildJob
 
         job = GroupBuildJob.objects.create(
             batch_hint=build_options.batch_hint, status='processing',

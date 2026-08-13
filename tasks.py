@@ -16,8 +16,8 @@ def run_group_build(self, job_id, options):
     """
     from django.utils import timezone
 
-    from jewar_extension.models import GroupBuildJob
-    from jewar_extension.services.group_builder import BuildOptions, build
+    from .models import GroupBuildJob
+    from .services.group_builder import BuildOptions, build
 
     # Atomic claim — the button is also guarded, but a retried or duplicated
     # task must never build the same batch twice.

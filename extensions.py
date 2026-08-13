@@ -42,7 +42,10 @@ class CampaignExtension(ModelExtension):
         wizard's. None of these fields exist on a Campaign, so the values come
         from the posted payload rather than from self.
         """
-        from jewar_extension.services.group_builder import preview
+        # Relative: this package is imported as "modules.jewar_extension" in-repo
+        # and as top-level "jewar_extension" when the fleet clones it into
+        # extensions/. An absolute import names one layout and breaks the other.
+        from .services.group_builder import preview
 
         return preview(getattr(self, '_original_data', None) or {})
 
@@ -51,9 +54,9 @@ class CampaignExtension(ModelExtension):
         """Build a new batch of WhatsApp contact groups."""
         from django.utils import timezone
 
-        from jewar_extension.models import GroupBuildJob
-        from jewar_extension.services.group_builder import BuildOptions, compute, running_job
-        from jewar_extension.tasks import run_group_build
+        from .models import GroupBuildJob
+        from .services.group_builder import BuildOptions, compute, running_job
+        from .tasks import run_group_build
 
         hint = (record.batch_hint or '').strip()
         if not hint:
@@ -83,7 +86,22 @@ class CampaignExtension(ModelExtension):
             batch_hint=hint, status='pending', options=options.to_dict(),
             total_records=plan.final_contacts, started_at=timezone.now())
 
-        async_result = run_group_build.delay(job.id, options.to_dict())
+        # The row is written before the enqueue so a task that starts instantly
+        # still finds it. That ordering means a failed enqueue leaves a 'pending'
+        # row behind — and because running_job() counts 'pending' as live, that
+        # one row would answer "another build is currently running" to every
+        # later attempt, forever. Fail it explicitly instead.
+        try:
+            async_result = run_group_build.delay(job.id, options.to_dict())
+        except Exception as exc:
+            logger.exception("could not queue group build job %s", job.id)
+            GroupBuildJob.objects.filter(pk=job.pk).update(
+                status='failed', completed_at=timezone.now(),
+                result_message=f'could not reach the task queue: {exc}'[:2000])
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _("Could not queue the build — the task queue is "
+                                 "unreachable. Nothing was created.")}
+
         GroupBuildJob.objects.filter(pk=job.pk).update(celery_task_id=async_result.id or '')
 
         return {

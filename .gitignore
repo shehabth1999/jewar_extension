@@ -31,8 +31,6 @@ static_root/
 *.pem
 *.key
 
-# ── Translations (compiled) ──────────────────────────────
-*.mo
 
 # ── Tooling caches ───────────────────────────────────────
 .pytest_cache/

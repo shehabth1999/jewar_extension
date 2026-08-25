@@ -33,7 +33,8 @@ class CampaignExtension(ModelExtension):
 
     @onchange('group_size', 'excluded_accounts', 'exclude_suppliers', 'dedupe_handsets',
               'exclude_meta_errors', 'exclude_templated_this_month',
-              'exclude_any_previous_batch', 'exclude_specific_batch', 'exclude_batch_hint')
+              'exclude_any_previous_batch', 'exclude_specific_batch', 'exclude_batch_hint',
+              'tags', 'lead_stages')
     def _onchange_build_groups_preview(self):
         """Footer preview for the build wizard, registered on this model too.
 

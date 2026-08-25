@@ -194,6 +194,44 @@ jewar_build_groups_form_view = {
                         },
                     ],
                 },
+                {
+                    # Targeting, not suppression: leaving both empty means every
+                    # contact qualifies. Picking anything here narrows the build
+                    # to the contacts that match.
+                    "title": _("Targeting"),
+                    "groups": [
+                        {
+                            "title": _("Tags"),
+                            "fields": [
+                                {
+                                    "name": "tags",
+                                    "string": _("Only contacts with these tags"),
+                                    "widget": "relation",
+                                    "displayField": "name",
+                                    "multiSelect": True,
+                                    "onChange": True,
+                                    "placeholder": _("Any tag"),
+                                    "help": _("Leave empty to include contacts regardless of their tags"),
+                                },
+                            ],
+                        },
+                        {
+                            "title": _("CRM"),
+                            "fields": [
+                                {
+                                    "name": "lead_stages",
+                                    "string": _("Only contacts whose latest lead is in these stages"),
+                                    "widget": "relation",
+                                    "displayField": "name",
+                                    "multiSelect": True,
+                                    "onChange": True,
+                                    "placeholder": _("Any stage"),
+                                    "help": _("Uses the most recent lead per contact, not every lead they ever had"),
+                                },
+                            ],
+                        },
+                    ],
+                },
             ],
             "footer": {
                 "position": "end",
@@ -206,6 +244,8 @@ jewar_build_groups_form_view = {
                     _readout("removed_previous_batches", _("Removed — previous batches")),
                     _readout("removed_sent_this_month", _("Removed — sent this month")),
                     _readout("removed_meta_errors", _("Removed — Meta errors")),
+                    _readout("removed_no_tag_match", _("Removed — tag mismatch")),
+                    _readout("removed_no_stage_match", _("Removed — lead stage mismatch")),
                     _readout("removed_duplicates", _("Removed — duplicate phones")),
                     {"separator": "bold"},
                     _readout("final_contacts", _("Final contacts"), highlight=True),

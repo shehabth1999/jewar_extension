@@ -60,6 +60,33 @@ META_BLOCK_CODES = {
 }
 
 
+def _ids(raw):
+    """Normalise an m2m payload (ids, dicts, a bare value) to a sorted id tuple."""
+    if raw in (None, '', []):
+        return ()
+    if isinstance(raw, (int, str)):
+        raw = [raw]
+    out = []
+    for item in raw:
+        if isinstance(item, dict):
+            item = item.get('id')
+        try:
+            out.append(int(item))
+        except (TypeError, ValueError):
+            continue
+    return tuple(sorted(set(out)))
+
+
+def _wizard_m2m(record, name):
+    """Read an m2m off the wizard, whether or not the row has been saved yet."""
+    pending = (getattr(record, '_m2m_data', None) or {}).get(name)
+    if pending is not None:
+        return _ids(pending if isinstance(pending, (list, tuple)) else [pending])
+    if record.pk:
+        return tuple(sorted(getattr(record, name).values_list('id', flat=True)))
+    return ()
+
+
 @dataclass(frozen=True)
 class BuildOptions:
     batch_hint: str
@@ -71,6 +98,8 @@ class BuildOptions:
     exclude_templated_this_month: bool = False
     exclude_any_previous_batch: bool = False
     exclude_batch_hint: str = ''
+    tag_ids: tuple = ()
+    lead_stage_ids: tuple = ()
 
     @classmethod
     def from_wizard(cls, record):
@@ -78,13 +107,7 @@ class BuildOptions:
         # instance cannot be asked for its m2m. The proxy stashes pending m2m
         # assignments on _m2m_data, so read that first and fall back to the
         # relation only once the row exists.
-        pending = (getattr(record, '_m2m_data', None) or {}).get('excluded_accounts')
-        if pending is not None:
-            excluded = tuple(sorted(int(a.pk if hasattr(a, 'pk') else a) for a in pending))
-        elif record.pk:
-            excluded = tuple(sorted(record.excluded_accounts.values_list('id', flat=True)))
-        else:
-            excluded = ()
+        excluded = _wizard_m2m(record, 'excluded_accounts')
         return cls(
             batch_hint=(record.batch_hint or '').strip(),
             group_size=record.group_size or 250,
@@ -96,6 +119,8 @@ class BuildOptions:
             exclude_any_previous_batch=bool(record.exclude_any_previous_batch),
             exclude_batch_hint=(record.exclude_batch_hint or '').strip()
             if record.exclude_specific_batch else '',
+            tag_ids=_wizard_m2m(record, 'tags'),
+            lead_stage_ids=_wizard_m2m(record, 'lead_stages'),
         )
 
     @classmethod
@@ -137,6 +162,8 @@ class BuildOptions:
             exclude_any_previous_batch=flag('exclude_any_previous_batch'),
             exclude_batch_hint=(str(values.get('exclude_batch_hint') or '').strip()
                                 if flag('exclude_specific_batch') else ''),
+            tag_ids=_ids(values.get('tags')),
+            lead_stage_ids=_ids(values.get('lead_stages')),
         )
 
     def to_dict(self):
@@ -145,7 +172,8 @@ class BuildOptions:
     @classmethod
     def from_dict(cls, data):
         data = dict(data or {})
-        data['exclude_account_ids'] = tuple(data.get('exclude_account_ids') or ())
+        for key in ('exclude_account_ids', 'tag_ids', 'lead_stage_ids'):
+            data[key] = tuple(data.get(key) or ())
         return cls(**data)
 
 
@@ -163,6 +191,8 @@ class BuildPlan:
     removed_previous_batches: int = 0
     removed_sent_this_month: int = 0
     removed_meta_errors: int = 0
+    removed_no_tag_match: int = 0
+    removed_no_stage_match: int = 0
     removed_duplicates: int = 0
     final_contacts: int = 0
     group_count: int = 0
@@ -179,6 +209,8 @@ class BuildPlan:
             'removed_previous_batches': self.removed_previous_batches,
             'removed_sent_this_month': self.removed_sent_this_month,
             'removed_meta_errors': self.removed_meta_errors,
+            'removed_no_tag_match': self.removed_no_tag_match,
+            'removed_no_stage_match': self.removed_no_stage_match,
             'removed_duplicates': self.removed_duplicates,
             'final_contacts': self.final_contacts,
             'group_count': self.group_count,
@@ -194,6 +226,8 @@ class BuildPlan:
             f"  Previous batches    {self.removed_previous_batches:>10,}",
             f"  Sent this month     {self.removed_sent_this_month:>10,}",
             f"  Meta errors         {self.removed_meta_errors:>10,}",
+            f"  Tag mismatch        {self.removed_no_tag_match:>10,}",
+            f"  Lead stage mismatch {self.removed_no_stage_match:>10,}",
             f"  Duplicate phones    {self.removed_duplicates:>10,}",
             f"Final contacts        {self.final_contacts:>10,}",
             f"Groups                {self.group_count:>10,}",
@@ -224,6 +258,27 @@ def _partner_ids_templated_since(cur, since):
         f"join chat_conversation cv on cv.id = m.conversation_id "
         f"where {TEMPLATE_SENT} and cv.social_partner_id is not null "
         f"and m.created_at >= %s", [since])
+    return {r[0] for r in cur.fetchall()}
+
+
+def _partner_ids_with_tags(cur, tag_ids):
+    cur.execute("select distinct partner_id from base_partner_tags where tag_id = any(%s)",
+                [list(tag_ids)])
+    return {r[0] for r in cur.fetchall()}
+
+
+def _partner_ids_in_lead_stages(cur, stage_ids):
+    """Partners whose MOST RECENT lead sits in one of these stages.
+
+    Most recent, not any: a contact who was 'interested' a year ago and 'lost'
+    last week should follow the last thing that happened to them.
+    """
+    cur.execute(
+        "select partner_id from ("
+        "  select distinct on (partner_id) partner_id, stage_id"
+        "  from crm_lead where partner_id is not null"
+        "  order by partner_id, created_at desc, id desc"
+        ") latest where stage_id = any(%s)", [list(stage_ids)])
     return {r[0] for r in cur.fetchall()}
 
 
@@ -286,6 +341,13 @@ def compute(options: BuildOptions) -> BuildPlan:
 
         meta_ids = _partner_ids_meta_blocked(cur) if options.exclude_meta_errors else set()
 
+        # Targeting sets are INCLUDE lists: empty means "everyone qualifies", so
+        # None is the sentinel for "filter not in use" — an empty set would mean
+        # the opposite and quietly build nothing.
+        tag_ids = _partner_ids_with_tags(cur, options.tag_ids) if options.tag_ids else None
+        stage_ids = (_partner_ids_in_lead_stages(cur, options.lead_stage_ids)
+                     if options.lead_stage_ids else None)
+
     plan.total_contacts = len(rows)
 
     # When we dedupe, an exclusion is about the PERSON, not the row: if any row
@@ -299,6 +361,12 @@ def compute(options: BuildOptions) -> BuildPlan:
         return {pid for pid, _aid, ph, _sup in rows if ph in phones}
 
     prev_ids, month_ids, meta_ids = promote(prev_ids), promote(month_ids), promote(meta_ids)
+    # Same promotion for the include lists: if one row of a handset carries the
+    # tag, the person carries it, whichever account's row ends up chosen.
+    if tag_ids is not None:
+        tag_ids = promote(tag_ids)
+    if stage_ids is not None:
+        stage_ids = promote(stage_ids)
 
     # Sequential funnel - each row is removed by the first rule that catches it,
     # so the counts add up to total_contacts exactly.
@@ -314,6 +382,10 @@ def compute(options: BuildOptions) -> BuildPlan:
             plan.removed_sent_this_month += 1
         elif pid in meta_ids:
             plan.removed_meta_errors += 1
+        elif tag_ids is not None and pid not in tag_ids:
+            plan.removed_no_tag_match += 1
+        elif stage_ids is not None and pid not in stage_ids:
+            plan.removed_no_stage_match += 1
         else:
             kept.append((pid, aid, ph))
 

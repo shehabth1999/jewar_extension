@@ -76,6 +76,16 @@ class BuildGroupsWizard(TransientModel):
     exclude_batch_hint = models.CharField(_("Batch name to exclude"), max_length=64,
                                           blank=True, default='')
 
+    # Targeting, as opposed to everything above it: these narrow WHO is eligible
+    # rather than suppress people who are. Empty means "no restriction", which is
+    # why they are m2m and not a pair of booleans.
+    tags = models.ManyToManyField(
+        'base.Tag', blank=True, related_name='+',
+        verbose_name=_("Only contacts with these tags"))
+    lead_stages = models.ManyToManyField(
+        'crm.Stage', blank=True, related_name='+',
+        verbose_name=_("Only contacts whose latest lead is in these stages"))
+
     # --- footer preview (read-only, recomputed on every change) -------------
     total_contacts = models.IntegerField(default=0)
     unique_phones = models.IntegerField(default=0)
@@ -84,6 +94,8 @@ class BuildGroupsWizard(TransientModel):
     removed_previous_batches = models.IntegerField(default=0)
     removed_sent_this_month = models.IntegerField(default=0)
     removed_meta_errors = models.IntegerField(default=0)
+    removed_no_tag_match = models.IntegerField(default=0)
+    removed_no_stage_match = models.IntegerField(default=0)
     removed_duplicates = models.IntegerField(default=0)
     final_contacts = models.IntegerField(default=0)
     group_count = models.IntegerField(default=0)
@@ -97,7 +109,8 @@ class BuildGroupsWizard(TransientModel):
 
     @onchange('group_size', 'excluded_accounts', 'exclude_suppliers', 'dedupe_handsets',
               'exclude_meta_errors', 'exclude_templated_this_month',
-              'exclude_any_previous_batch', 'exclude_specific_batch', 'exclude_batch_hint')
+              'exclude_any_previous_batch', 'exclude_specific_batch', 'exclude_batch_hint',
+              'tags', 'lead_stages')
     def _onchange_preview(self):
         """Repaint the footer with the real numbers for the current settings.
 
